@@ -54,9 +54,8 @@ for (list in sel_table_short){
 mat_adja<-mat_adja[mat_adja[,1] != mat_adja[,2],]
 # This plots the network, but is too complex to understand
 plot(graph.data.frame(mat_adja), layout=layout.circle, main="circle")
-# We save the igraph
-mygraph<-graph.data.frame(mat_adja, directed = FALSE)
-# We represent the igraph with the ggraph package in a circular form
-ggraph(mygraph, layout = 'dendrogram', circular = TRUE) +
-  geom_edge_diagonal() +
-  theme_void()
+
+# # We represent the igraph with the chordDiagram package in a circular form
+adj_graph<-get.adjacency(graph.data.frame(mat_adja, directed = FALSE),type = "lower")
+chordDiagram(as.matrix(adj_graph), transparency = 0.5)
+
