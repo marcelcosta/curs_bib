@@ -1,6 +1,7 @@
 library(wordcloud)
 library(ggplot2)
-
+library(igraph)
+library(ggraph)
 # setwd("~/Documents/curs_bib/") #This is for me
 # We define a list of autoimmune diseases
 diseases<-c("Allergies", "Alzheimer's", "Anxiety", "Panic", "Arthritis", "Breast",
