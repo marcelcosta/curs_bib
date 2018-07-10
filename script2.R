@@ -29,6 +29,7 @@ sel_table_short<-sel_table[lapply(sel_table, length) > 0] #We remove the list en
 # We keep only one appearence by post
 sel_table_short<-sapply(sel_table_short, function(x) x[!duplicated(x)])
 
+## Here we will represent individual word frequencies
 # We join all appearence in a unique vector (we loose the information by post)
 v_sel<-unlist(sel_table_short, use.names=FALSE)
 
@@ -38,3 +39,24 @@ df_vsel<-as.data.frame(sort(table(v_sel)))
 # We represent this frequencies
 ggplot(df_vsel, aes(v_sel, Freq))+geom_bar(stat="identity")+coord_flip()
 wordcloud(df_vsel$v_sel, df_vsel$Freq, random.color = FALSE, colors=colorRampPalette(c("red", "green"))(200))
+
+
+## Here we will represent connections of two words within single posts
+# We will create an edgelist for every post and will concatenate them.
+mat_adja<-matrix(nrow=0, ncol=2)
+for (list in sel_table_short){
+  if (length(list) > 1){
+    adjacency_temp<-matrix(rep(1, length(list)), length(list), length(list), dimnames=list(list, list))
+    mat_adja<-rbind(mat_adja,  get.edgelist(graph.adjacency(adjacency_temp)))
+  }
+}
+# Here we will remove "self connections". Eg: "depression" connected to "depression".
+mat_adja<-mat_adja[mat_adja[,1] != mat_adja[,2],]
+# This plots the network, but is too complex to understand
+plot(graph.data.frame(mat_adja), layout=layout.circle, main="circle")
+# We save the igraph
+mygraph<-graph.data.frame(mat_adja, directed = FALSE)
+# We represent the igraph with the ggraph package in a circular form
+ggraph(mygraph, layout = 'dendrogram', circular = TRUE) +
+  geom_edge_diagonal() +
+  theme_void()
