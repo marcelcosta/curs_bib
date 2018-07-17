@@ -82,7 +82,7 @@ df_dtm_dis_freq<-data.frame("words"=names(tmp), "freq"=as.numeric(tmp))
 ggplot(df_dtm_dis_freq, aes(as.factor(words), freq))+geom_bar(stat="identity")+scale_x_discrete(limits=rev(df_dtm_dis_freq$words))+coord_flip()
 
 library(wordcloud)
-wordcloud(df_vsel$v_sel, df_vsel$Freq, random.color = FALSE, colors=colorRampPalette(c("red", "green"))(200))
+wordcloud(df_dtm_dis_freq$words, df_dtm_dis_freq$freq, random.color = FALSE, colors=colorRampPalette(c("red", "green"))(200))
 
 ## Create a network from DTM
 # We create a weighted edge list
@@ -95,11 +95,25 @@ mat_adja <- as.data.frame(as.table(tdm.matrix))
 mat_adja<-mat_adja[mat_adja[,1] != mat_adja[,2],]
 mat_adja<-mat_adja[mat_adja[,3] > 0,]
 
-# We create the network graphic from the edge list
+# We remove the duplicated connections (for as both directions are the same: A->B vs B->A)
+mat_adja<-mat_adja[duplicated(
+  lapply(1:nrow(mat_adja), function(y){
+    A <- mat_adja[y, ]
+    as.vector(unlist(A[order(A)]))
+  })),]
+
+# We create the network graphic from the edge list and we add the weight of each edge
 g=graph.edgelist(as.matrix(mat_adja[,1:2]), directed = FALSE)
 E(g)$weight=as.numeric(mat_adja[,3])
 
-# We exctracte the adjacency matrix and we plot it with chordDiagram
+# We exctract the adjacency matrix and we plot it with chordDiagrasm
 adj_graph<-get.adjacency(g, attr='weight', type="lower")
 chordDiagram(as.matrix(adj_graph), transparency = 0.5)
+
+# We save a plot using igraph specifying edge size by its weight # This commands are to plot the png, are not suitable for visualizing inside Rstudio, as letters are very big.
+png("test_nw.png", res=300, units="px", width=10000, height = 10000)
+plot(g, edge.width=E(g)$weight/5, layout=layout_with_kk, edge.color="black", 
+     vertex.size=igraph::degree(g, mode="all")/2, rescale=T, vertex.label.cex=4,
+     vertex.color="#ffffcc", vertex.frame.cex=10)
+dev.off()
 
