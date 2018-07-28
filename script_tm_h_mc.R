@@ -15,7 +15,7 @@ library(wordcloud)
 library(icd)
 
 
-setwd("~/R studio projects/UB project")
+# setwd("~/R studio projects/UB project")
 # setwd("~/Documents/curs_bib/") #This is for me
 ## 1. Corpus (loading data and creating the corpus)
 
@@ -193,22 +193,26 @@ diseases<-tolower(c("Allergies", "Alzheimer's", "Anxiety", "Panic", "Arthritis",
                     "Fatigue", "Crohn's", "Cystic", "Fibrosis", "Depression", "Diabetes", "Epilepsy",
                     "Fibromyalgia", "GERD", "Reflux)", "Headaches", "Heartburn", "Hepatitis","Irritable", "Bowel",
                     "Lupus", "Lyme", "Migraines", "Sclerosis", "Parkinson's", "Prostate", "Cancer"))
-side_effects<-as.character(unique(read.csv("meddra_all_se.tsv", sep = "\t")[,6]))
-drugs<-as.character(unique(read.csv("drug_names.tsv", sep="\t")[,2]))
+side_effects<-tolower(as.character(unique(read.csv("meddra_all_se.tsv", sep = "\t")[,6])))
+drugs<-tolower(as.character(unique(read.csv("drug_names.tsv", sep="\t")[,2])))
+dictionaries<-data.frame("words"=stemDocument(tolower(c(diseases,drugs,side_effects))), "category"=c(rep("diseases",length(diseases)), rep("drugs",length(drugs)), rep("side_effects",length(side_effects))))
 
-dtm_dis<-DocumentTermMatrix(mydata, list(dictionary= stemDocument(c(diseases, drugs))))
+dtm_dis<-DocumentTermMatrix(mydata, list(dictionary= stemDocument(c(diseases, drugs, side_effects))))
 # We use stemDocument() function to us the root of the words to filter, otherwise they won't coincide with mydata
 
-mt_dtm_dis<-as.matrix(dtm_dis[,findFreqTerms(dtm_dis, 2)]) ## I have to filter for the words that have at least 1 occurrence because if not the size of the matrix was huge
+mt_dtm_dis<-as.matrix(dtm_dis[,findFreqTerms(dtm_dis, 100)]) ## I have to filter for the words that have at least 100 occurrence because if not the size of the matrix was huge
 mt_dtm_dis<-mt_dtm_dis[apply(mt_dtm_dis, 1, function(x) !all(x == 0)),] ## I remove the empty documents
 
 # We calculate the number of appearences for every word (counting only one by document)
 tmp<-sort(apply(mt_dtm_dis, 2, function(x) length(x[x > 0])), decreasing = T)
 df_dtm_dis_freq<-data.frame("words"=names(tmp), "freq"=as.numeric(tmp))
-ggplot(df_dtm_dis_freq[1:50,], aes(as.factor(words), freq))+geom_bar(stat="identity")+scale_x_discrete(limits=rev(df_dtm_dis_freq$words))+coord_flip()
+
+# Ploting some simple plots
+ggplot(df_dtm_dis_freq[1:20,], aes(as.factor(words), freq))+geom_bar(stat="identity")+scale_x_discrete(limits=rev(df_dtm_dis_freq$words[1:20]))+coord_flip()
 ggplot(data=df_dtm_dis_freq[df_dtm_dis_freq$words %in% stemDocument(drugs),][1:50,], aes(as.factor(words), freq))+
   geom_bar(stat="identity")+
   scale_x_discrete(limits=rev(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(drugs)][1:50]))+coord_flip()
+wordcloud(df_dtm_dis_freq$words[1:200], df_dtm_dis_freq$freq[1:200], random.color = FALSE, colors=colorRampPalette(c("red", "green"))(200))
 
 ## Create a network from DTM
 # We create a weighted edge list
@@ -228,6 +232,16 @@ mat_adja<-mat_adja[duplicated(
     as.vector(unlist(A[order(A)]))
   })),]
 
+# We remove connections between words from the same dictionary.
+mat_adja<-mat_adja[unlist(lapply(1:nrow(mat_adja), function(y){
+  dictionaries[mat_adja[y,1],2] != dictionaries[mat_adja[y,2],2]
+})),]
+
+# We make a vector with the 10 words of each dictionary that appear most
+topcategories<-as.character(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(tolower(as.character(diseases)))][1:10])
+topcategories<-append(topcategories,as.character(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(tolower(as.character(drugs)))][1:10]))
+topcategories<-append(topcategories,as.character(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(tolower(as.character(side_effects)))][1:10]))
+
 # We create the network graphic from the edge list and we add the weight of each edge
 g=graph.edgelist(as.matrix(mat_adja[,1:2]), directed = FALSE)
 E(g)$weight=as.numeric(mat_adja[,3])
@@ -235,12 +249,27 @@ E(g)$weight=as.numeric(mat_adja[,3])
 # We exctract the adjacency matrix and we plot it with chordDiagrasm
 adj_graph<-get.adjacency(g, attr='weight', type="lower")
 mat<-as.matrix(adj_graph)
-mat<-mat[rownames(mat) %in% stemDocument(diseases),colnames(mat) %in% stemDocument(drugs)]
-mat<-mat[,colnames(mat) %in% df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(drugs)][1:20]]
 
-# chordDiagram(as.matrix(adj_graph), transparency = 0.5)
-# circos.par(gap.after=c(rep(5,ncol(mat)-1), 15, rep(5,nrow(mat)-1),15))
-chordDiagram(mat, annotationTrack = "grid", preAllocateTracks = 1, directional = F) #, grid.col = grid.col)
+# Different ways to select the connectors
+# mat<-mat[,colnames(mat) %in% df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(drugs)][1:20]]
+# mat<-mat[rownames(mat) %in% df_dtm_dis_freq$words[1:30],colnames(mat) %in% df_dtm_dis_freq$words[1:30]]
+# This is one selects the words previosly stored in the "topcategories" vector
+mat<-mat[rownames(mat) %in% topcategories,colnames(mat) %in% topcategories]
+
+# All this is to sort the words by dictionary and to assign colors to each one that will be used in the chordDiagram
+mat_words<-union(colnames(mat), rownames(mat))
+tmp_order<-c(which(mat_words %in% stemDocument(tolower(diseases))), which(mat_words %in% stemDocument(tolower(drugs))), which(mat_words %in% stemDocument(tolower(side_effects))))
+tmp_color<-vector(length=length(mat_words))
+tmp_color[which(mat_words %in% stemDocument(tolower(side_effects)))]<-"red"
+tmp_color[which(mat_words %in% stemDocument(tolower(drugs)))]<-"blue"
+tmp_color[which(mat_words %in% stemDocument(tolower(diseases)))]<-"green"
+# tmp_color<-c(rep("green",length(mat_words[mat_words %in% stemDocument(tolower(diseases))])), rep("blue",length(mat_words[mat_words %in% stemDocument(tolower(drugs))])), rep("red",length(mat_words[mat_words %in% stemDocument(tolower(side_effects))])))
+mat_words<-mat_words[tmp_order[!duplicated(tmp_order)]]
+grid.col<-tmp_color[tmp_order[!duplicated(tmp_order)]]
+
+# Ploting the chordDiagram
+png("chordDiagram_top10_dictionaries.png", res=300, units = "px", width = 2000, height = 2000)
+chordDiagram(mat, order=mat_words, annotationTrack = "grid", preAllocateTracks = 1, directional = F, grid.col = grid.col)
 circos.trackPlotRegion(track.index = 1, panel.fun = function(x, y) {
   xlim = get.cell.meta.data("xlim")
   ylim = get.cell.meta.data("ylim")
@@ -248,4 +277,4 @@ circos.trackPlotRegion(track.index = 1, panel.fun = function(x, y) {
   circos.text(mean(xlim), ylim[1] + .1, sector.name, facing = "clockwise", niceFacing = TRUE, adj = c(0, 0.5))
   circos.axis(h = "top", labels.cex = 0.5, major.tick.percentage = 0.2, sector.index = sector.name, track.index = 2)
 }, bg.border = NA)
-circos.clear()
+dev.off()
