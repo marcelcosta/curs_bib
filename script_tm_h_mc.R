@@ -278,3 +278,29 @@ circos.trackPlotRegion(track.index = 1, panel.fun = function(x, y) {
   circos.axis(h = "top", labels.cex = 0.5, major.tick.percentage = 0.2, sector.index = sector.name, track.index = 2)
 }, bg.border = NA)
 dev.off()
+
+                ##Sentimental analysis
+
+library(syuzhet)
+
+mydataCopy <- mydata
+#carryout sentiment mining using the get_nrc_sentiment()function log the findings under a variable result
+result <- get_nrc_sentiment(as.character(mydataCopy))
+
+#change result from a list to a dataframe and transpose it 
+result1<-data.frame(t(result))
+
+#rowSums computes column sums across rows for each level of a grouping variable.
+new_result <- data.frame(rowSums(result1))
+
+
+#name rows and columns of the dataframe
+names(new_result)[1] <- "count"
+new_result <- cbind("sentiment" = rownames(new_result), new_result)
+rownames(new_result) <- NULL
+
+#plot the first 8 rows  ,distict emotions
+qplot(sentiment, data=new_result[1:8,], weight=count, geom="bar",fill=sentiment)+ggtitle("TedTalk Sentiments")
+
+#plot the positive and negative
+qplot(sentiment, data=new_result[9:10,], weight=count, geom="bar",fill=sentiment)+ggtitle("TedTalk Sentiments")
