@@ -67,10 +67,10 @@ wordcloud(df_vsel$v_sel, df_vsel$Freq, random.color = FALSE, colors=colorRampPal
 
 ## Marcel:
 ## We generate the Document Term Matrix filtering with the Dictionary Diseases, defined manually
-diseases<-tolower(c("Allergies", "Alzheimer's", "Anxiety", "Panic", "Arthritis", "Breast",
-            "Fatigue", "Crohn's", "Cystic", "Fibrosis", "Depression", "Diabetes", "Epilepsy",
-            "Fibromyalgia", "GERD", "Reflux)", "Headaches", "Heartburn", "Hepatitis","Irritable", "Bowel",
-            "Lupus", "Lyme", "Migraines", "Sclerosis", "Parkinson's", "Prostate", "Cancer"))
+diseases<-tolower(c("Allergies", "Alzheimer", "Arthritis", "Breast",
+            "Fatigue", "Crohn", "Fibrosis", "Depression", "Diabetes", "Epilepsy",
+            "Fibromyalgia", "GERD", "Headache", "Heartburn", "Hepatitis", "Colitis",
+            "Lupus", "Lyme", "Migraine", "Sclerosis", "Parkinson", "Prostate", "Cancer"))
 dtm_dis<-DocumentTermMatrix(mydata, list(dictionary= stemDocument(diseases)))
 # We use stemDocument() function to us the root of the words to filter, otherwise they won't coincide with mydata
 
@@ -189,10 +189,10 @@ circos.trackPlotRegion(track.index = 1, panel.fun = function(x, y) {
 
 ## Code trying to join the three dictionaries
 ## We generate the Document Term Matrix filtering with the Dictionary Diseases, defined manually
-diseases<-tolower(c("Allergies", "Alzheimer's", "Anxiety", "Panic", "Arthritis", "Breast",
-                    "Fatigue", "Crohn's", "Cystic", "Fibrosis", "Depression", "Diabetes", "Epilepsy",
-                    "Fibromyalgia", "GERD", "Reflux)", "Headaches", "Heartburn", "Hepatitis","Irritable", "Bowel",
-                    "Lupus", "Lyme", "Migraines", "Sclerosis", "Parkinson's", "Prostate", "Cancer"))
+diseases<-tolower(c("Allergies", "Alzheimer", "Arthritis", "Breast",
+            "Fatigue", "Crohn", "Fibrosis", "Depression", "Diabetes", "Epilepsy",
+            "Fibromyalgia", "GERD", "Headache", "Heartburn", "Hepatitis", "Colitis",
+            "Lupus", "Lyme", "Migraine", "Sclerosis", "Parkinson", "Prostate", "Cancer"))
 side_effects<-tolower(as.character(unique(read.csv("meddra_all_se.tsv", sep = "\t")[,6])))
 drugs<-tolower(as.character(unique(read.csv("drug_names.tsv", sep="\t")[,2])))
 dictionaries<-data.frame("words"=stemDocument(tolower(c(diseases,drugs,side_effects))), "category"=c(rep("diseases",length(diseases)), rep("drugs",length(drugs)), rep("side_effects",length(side_effects))))
