@@ -67,10 +67,11 @@ wordcloud(df_vsel$v_sel, df_vsel$Freq, random.color = FALSE, colors=colorRampPal
 
 ## Marcel:
 ## We generate the Document Term Matrix filtering with the Dictionary Diseases, defined manually
-diseases<-tolower(c("Allergies", "Alzheimer", "Arthritis", "Bipolar", "Breast", "Celiac"
-                     "Fatigue", "Crohn", "Fibrosis", "Thyroid", "Kidney", "Diabetes", "Epilepsy",
+diseases<-tolower(c("Allergies","Asthma", "Alzheimer", "Anxiety", "Arthritis", "Bipolar", "Breast", "Celiac",
+                     "Fatigue", "Crohn", "Depression", "Fibrosis", "Thyroid", "Kidney", "Diabetes", "Epilepsy",
                      "Fibromyalgia", "GERD", "Headache", "Heart", "Bowel", "Ostomies", "Hepatitis", "Colitis",
-                     "Lupus", "Lyme", "Migraine", "Sclerosis", "Parkinson", "Prostate", "Cancer", "Psoriasis", "Sjogren"))
+                     "Lupus", "Lyme", "Migraine", "Sclerosis", "Parkinson", "Prostate", "Cancer", 
+                     "Psoriasis", "Sjogren", "Pain"))
 dtm_dis<-DocumentTermMatrix(mydata, list(dictionary= stemDocument(diseases)))
 # We use stemDocument() function to us the root of the words to filter, otherwise they won't coincide with mydata
 
