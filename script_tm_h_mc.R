@@ -209,10 +209,47 @@ df_dtm_dis_freq<-data.frame("words"=names(tmp), "freq"=as.numeric(tmp))
 
 # Ploting some simple plots
 ggplot(df_dtm_dis_freq[1:20,], aes(as.factor(words), freq))+geom_bar(stat="identity")+scale_x_discrete(limits=rev(df_dtm_dis_freq$words[1:20]))+coord_flip()
-ggplot(data=df_dtm_dis_freq[df_dtm_dis_freq$words %in% stemDocument(drugs),][1:50,], aes(as.factor(words), freq))+
+png("freq_diseases.png", res=900, units="px", width=3000, height = 2000)
+ggplot(data=df_dtm_dis_freq[df_dtm_dis_freq$words %in% stemDocument(diseases),][1:10,], aes(as.factor(words), freq))+
+  geom_bar(stat="identity", fill="aquamarine", color="black")+
+  scale_x_discrete(limits=rev(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(diseases)][1:10]))+coord_flip()+
+  labs(x="", y="Frequency")+
+  theme_bw()
+dev.off()
+png("wordcloud_diseases.png", res=300, units="px", width=3000, height = 3000)
+wordcloud(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(diseases)], df_dtm_dis_freq$freq[df_dtm_dis_freq$words %in% stemDocument(diseases)], 
+          random.color = FALSE, colors=colorRampPalette(c("red", "aquamarine"))(200))
+dev.off()
+
+png("freq_drugs.png", res=900, units="px", width=3000, height = 2000)
+ggplot(data=df_dtm_dis_freq[df_dtm_dis_freq$words %in% stemDocument(drugs),][1:10,], aes(as.factor(words), freq))+
+  geom_bar(stat="identity", fill="aquamarine", color="black")+
+  scale_x_discrete(limits=rev(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(drugs)][1:10]))+coord_flip()+
+  labs(x="", y="Frequency")+
+  theme_bw()
+dev.off()
+png("wordcloud_drugs.png", res=300, units="px", width=3000, height = 3000)
+wordcloud(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(drugs)], df_dtm_dis_freq$freq[df_dtm_dis_freq$words %in% stemDocument(drugs)], 
+          random.color = FALSE, colors=colorRampPalette(c("red", "aquamarine"))(200))
+dev.off()
+
+png("freq_symptoms.png", res=900, units="px", width=3000, height = 2000)
+ggplot(data=df_dtm_dis_freq[df_dtm_dis_freq$words %in% stemDocument(side_effects),][1:10,], aes(as.factor(words), freq))+
+  geom_bar(stat="identity", fill="aquamarine", color="black")+
+  scale_x_discrete(limits=rev(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(side_effects)][1:10]))+coord_flip()+
+  labs(x="", y="Frequency")+
+  theme_bw()
+dev.off()
+png("wordcloud_symptoms.png", res=300, units="px", width=3000, height = 3000)
+wordcloud(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(side_effects)][1:100], df_dtm_dis_freq$freq[df_dtm_dis_freq$words %in% stemDocument(side_effects)][1:100], 
+          random.color = FALSE, colors=colorRampPalette(c("red", "aquamarine"))(200))
+dev.off()
+
+ggplot(data=df_dtm_dis_freq[df_dtm_dis_freq$words %in% stemDocument(diseases),][1:50,], aes(as.factor(words), freq))+
   geom_bar(stat="identity")+
-  scale_x_discrete(limits=rev(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(drugs)][1:50]))+coord_flip()
+  scale_x_discrete(limits=rev(df_dtm_dis_freq$words[df_dtm_dis_freq$words %in% stemDocument(diseases)][1:50]))+coord_flip()
 wordcloud(df_dtm_dis_freq$words[1:200], df_dtm_dis_freq$freq[1:200], random.color = FALSE, colors=colorRampPalette(c("red", "green"))(200))
+
 
 ## Create a network from DTM
 # We create a weighted edge list
@@ -260,9 +297,9 @@ mat<-mat[rownames(mat) %in% topcategories,colnames(mat) %in% topcategories]
 mat_words<-union(colnames(mat), rownames(mat))
 tmp_order<-c(which(mat_words %in% stemDocument(tolower(diseases))), which(mat_words %in% stemDocument(tolower(drugs))), which(mat_words %in% stemDocument(tolower(side_effects))))
 tmp_color<-vector(length=length(mat_words))
-tmp_color[which(mat_words %in% stemDocument(tolower(side_effects)))]<-"red"
-tmp_color[which(mat_words %in% stemDocument(tolower(drugs)))]<-"blue"
-tmp_color[which(mat_words %in% stemDocument(tolower(diseases)))]<-"green"
+tmp_color[which(mat_words %in% stemDocument(tolower(side_effects)))]<-"IndianRed"
+tmp_color[which(mat_words %in% stemDocument(tolower(drugs)))]<-"blue4"
+tmp_color[which(mat_words %in% stemDocument(tolower(diseases)))]<-"aquamarine"
 # tmp_color<-c(rep("green",length(mat_words[mat_words %in% stemDocument(tolower(diseases))])), rep("blue",length(mat_words[mat_words %in% stemDocument(tolower(drugs))])), rep("red",length(mat_words[mat_words %in% stemDocument(tolower(side_effects))])))
 mat_words<-mat_words[tmp_order[!duplicated(tmp_order)]]
 grid.col<-tmp_color[tmp_order[!duplicated(tmp_order)]]
